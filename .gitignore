@@ -20,3 +20,5 @@ __pycache__/*
 *.DS_Store.env
 alx_trave_app1/
 alx_trave_app1/*
+alx_travel_app/alx_travel_app1
+alx_travel_app/alx_travel_app1/*
