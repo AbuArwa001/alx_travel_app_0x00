@@ -20,11 +20,9 @@ env = environ.Env(
     # set casting, default value
     DEBUG=(bool, False)
 )
-# Application definition
-AUTH_USER_MODEL = 'listings.User'
 
 # Add this to create default roles when migrations are run
-DEFAULT_ROLES = ['guest', 'host', 'admin']
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 # BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -47,9 +45,6 @@ SECRET_KEY = "django-insecure-5!0#cxn694kt88z()w)1&=(6=qh=@25=&(c&jt6*@_dvh*#6%z
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
-
-
 
 INSTALLED_APPS = [
     'listings',
@@ -75,10 +70,11 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.github",
     "allauth.socialaccount.providers.linkedin_oauth2",
     "allauth.socialaccount.providers.instagram",
-
     'drf_spectacular',
 ]
 
+AUTH_USER_MODEL = 'listings.User'
+DEFAULT_ROLES = ['guest', 'host', 'admin']
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",

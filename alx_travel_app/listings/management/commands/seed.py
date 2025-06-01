@@ -10,6 +10,18 @@ User = get_user_model()
 class Command(BaseCommand):
     help = 'Seeds the database with sample data'
 
+from django.core.management.base import BaseCommand
+from django.contrib.auth import get_user_model
+from listings.models import Role, Property, Booking, Payment, Review, Message
+from faker import Faker
+import random
+from datetime import datetime, timedelta
+
+User = get_user_model()
+
+class Command(BaseCommand):
+    help = 'Seeds the database with sample data'
+
     def handle(self, *args, **options):
         self.stdout.write('Seeding data...')
         self.create_roles()
@@ -22,35 +34,37 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('Successfully seeded database!'))
 
     def create_roles(self):
+        # Roles are already created by migration, just verify
         roles = ['guest', 'host', 'admin']
         for role in roles:
             Role.objects.get_or_create(role_name=role)
-        self.stdout.write('Created roles')
+        self.stdout.write('Verified roles exist')
 
     def create_users(self):
         fake = Faker()
         
-        # Create admin user
-        admin_role = Role.objects.get(role_name='admin')
-        admin = User.objects.create_user(
-            email='khalfanathman12@gmail.com',
-            first_name='Khalfan',
-            last_name='Athman',
-            password='Admin@123',
-            role=admin_role
-        )
-        admin.is_admin = True
-        admin.is_staff = True
-        admin.is_superuser = True
-        admin.save()
+        # Create admin user if doesn't exist
+        admin_email = 'khalfanathman12@gmail.com'
+        if not User.objects.filter(email=admin_email).exists():
+            admin_role = Role.objects.get(role_name='admin')
+            User.objects.create_superuser(
+                email=admin_email,
+                first_name='Khalfan',
+                last_name='Athman',
+                username='admin_user',
+                password='Admin123',
+                phone_number=fake.phone_number(),
+                role=admin_role
+            )
         
         # Create hosts
         host_role = Role.objects.get(role_name='host')
         for _ in range(5):
-            user = User.objects.create_user(
+            User.objects.create_user(
                 email=fake.unique.email(),
                 first_name=fake.first_name(),
                 last_name=fake.last_name(),
+                username=fake.user_name(),
                 password='host123',
                 phone_number=fake.phone_number(),
                 role=host_role
@@ -59,8 +73,9 @@ class Command(BaseCommand):
         # Create guests
         guest_role = Role.objects.get(role_name='guest')
         for _ in range(20):
-            user = User.objects.create_user(
+            User.objects.create_user(
                 email=fake.unique.email(),
+                username=fake.user_name(),
                 first_name=fake.first_name(),
                 last_name=fake.last_name(),
                 password='guest123',
@@ -69,6 +84,23 @@ class Command(BaseCommand):
             )
         
         self.stdout.write('Created users')
+
+    # Add your other seed methods (properties, bookings, etc.) below
+    def create_properties(self):
+        fake = Faker()
+        hosts = User.objects.filter(role__role_name='host')
+        property_types = ['Apartment', 'House', 'Villa', 'Cottage', 'Cabin']
+        
+        for host in hosts:
+            for _ in range(random.randint(1, 4)):
+                Property.objects.create(
+                    host=host,
+                    name=f"{random.choice(property_types)} in {fake.city()}",
+                    description=fake.paragraph(nb_sentences=5),
+                    location=fake.address(),
+                    price_per_night=random.randint(50, 500)
+                )
+        self.stdout.write('Created properties')
 
     def create_properties(self):
         fake = Faker()
