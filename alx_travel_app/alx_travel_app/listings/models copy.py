@@ -1,8 +1,8 @@
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, AbstractUser, BaseUserManager, Group, Permission,PermissionsMixin
+from django.conf import settings
+from django.contrib.auth.models import AbstractUser, BaseUserManager, Group, Permission
 from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
-
 
 class Role(models.Model):
     role_id = models.AutoField(primary_key=True)
@@ -16,9 +16,8 @@ class UserManager(BaseUserManager):
         if not email:
             raise ValueError('Users must have an email address')
         
-        email = self.normalize_email(email)
         user = self.model(
-            email=email,
+            email=self.normalize_email(email),
             first_name=first_name,
             last_name=last_name,
             phone_number=phone_number,
@@ -29,7 +28,7 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
     
-    def create_superuser(self, email, first_name, last_name, password=None, **extra_fields):
+    def create_superuser(self, email, first_name, last_name, password=None):
         admin_role = Role.objects.get_or_create(role_name='admin')[0]
         user = self.create_user(
             email,
@@ -38,30 +37,47 @@ class UserManager(BaseUserManager):
             password=password,
             role=admin_role
         )
-        user.is_staff = True
-        user.is_superuser = True
+        user.is_admin = True
         user.save(using=self._db)
         return user
 
-class User(AbstractBaseUser, PermissionsMixin):
-    username = None
+class User(AbstractUser):
+    class Meta:
+        # Add this to avoid reverse accessor clashes
+        swappable = 'AUTH_USER_MODEL'
+    username = None  # Remove username field, we'll use email instead
     user_id = models.AutoField(primary_key=True)
     role = models.ForeignKey(Role, on_delete=models.PROTECT)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     email = models.EmailField(max_length=255, unique=True)
+    password_hash = models.CharField(max_length=255)  # Will be handled by AbstractUser
     phone_number = models.CharField(max_length=20, null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
-    is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)
     
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
     
     objects = UserManager()
-    
+    groups = models.ManyToManyField(
+        Group,
+        verbose_name='groups',
+        blank=True,
+        help_text='The groups this user belongs to.',
+        related_name="custom_user_set",  # Changed from user_set
+        related_query_name="user",
+    )
+    user_permissions = models.ManyToManyField(
+        Permission,
+        verbose_name='user permissions',
+        blank=True,
+        help_text='Specific permissions for this user.',
+        related_name="custom_user_set",  # Changed from user_set
+        related_query_name="user",
+    )
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.email})"
+
 class Property(models.Model):
     property_id = models.AutoField(primary_key=True)
     host = models.ForeignKey('listings.User', on_delete=models.CASCADE, related_name='properties')

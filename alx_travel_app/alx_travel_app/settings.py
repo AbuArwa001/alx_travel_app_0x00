@@ -13,13 +13,18 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import environ
 import os
+from django.utils.translation import gettext_lazy as _
 
 # Initialise environment variables
 env = environ.Env(
     # set casting, default value
     DEBUG=(bool, False)
 )
+# Application definition
+AUTH_USER_MODEL = 'listings.User'
 
+# Add this to create default roles when migrations are run
+DEFAULT_ROLES = ['guest', 'host', 'admin']
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 # BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -44,9 +49,10 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 
-# Application definition
+
 
 INSTALLED_APPS = [
+    'listings',
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
