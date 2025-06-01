@@ -18,3 +18,5 @@ __pycache__/*
 .env
 *.env.*
 *.DS_Store.env
+alx_trave_app1/
+alx_trave_app1/*
