@@ -17,7 +17,27 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path
+from django.views.generic.base import RedirectView
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from listings.views import (
+    PropertyViewSet, BookingViewSet, PaymentViewSet, ReviewViewSet, MessageViewSet
+)
+
+from rest_framework import routers
+
+routers = routers.DefaultRouter()
+routers.register(r'properties', PropertyViewSet, basename='property')
+routers.register(r'bookings', BookingViewSet, basename='booking')
+routers.register(r'payments', PaymentViewSet, basename='payment')
+routers.register(r'reviews', ReviewViewSet, basename='review')
+routers.register(r'messages', MessageViewSet, basename='message')
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('', RedirectView.as_view(url='/api/docs/')),
 ]
+
+urlpatterns += routers.urls
